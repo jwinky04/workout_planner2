@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year-Long Hybrid Workout Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Earth -->
+    <!-- Application Structure Plan: This SPA is redesigned for an elegant, user-friendly experience of a year-long, periodized workout plan. The primary navigation is a set of "Quarter" tabs at the top, allowing seamless transition between training phases. Upon selecting a quarter, a dedicated overview section updates with its specific focus, goals, and a dynamic doughnut chart visualizing the weekly training balance for that quarter. Below this, a weekly navigation (Day 1-7) allows drill-down into daily routines. Each daily workout is presented with individual exercise cards featuring interactive elements: input fields for logging weight/reps, a "Log Set" button for saving progress to local storage and calculating a "Next Week Target," and "View History" and "Swap" buttons (opening minimalist modals) for deeper insights and exercise alternatives. A global dark mode toggle enhances visual comfort. This structure prioritizes intuitive exploration, practical tracking, and aesthetic appeal. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Year-long periodization with quarterly shifts. -> Goal: Organize/Inform. -> Viz/Method: Quarter selector tabs. -> Interaction: Click quarter tab to load specific quarter's plan. -> Justification: Clear temporal navigation for periodized training. -> Library/Method: Vanilla JS DOM manipulation.
+        - Report Info: Quarterly primary focus and goals. -> Goal: Inform. -> Viz/Method: Dynamic text sections. -> Interaction: Updates automatically with quarter selection. -> Justification: Clearly communicates the intent of each training phase. -> Library/Method: Vanilla JS DOM manipulation.
+        - Report Info: Weekly training balance for each quarter (e.g., more Strength days in Q2). -> Goal: Inform/Compare (across quarters). -> Viz/Method: Doughnut Chart. -> Interaction: Updates with quarter selection, hover for details. -> Justification: Visually summarizes the weekly focus distribution for the active quarter. -> Library: Chart.js.
+        - Report Info: Daily exercise lists with details (sets, reps, rest, notes). -> Goal: Organize/Inform. -> Viz/Method: Day selector tabs & expandable exercise cards. -> Interaction: Click day tab to show workout, click 'Show Details' for exercise specifics. -> Justification: Breaks down complex daily routines into manageable, interactive chunks. -> Library/Method: Vanilla JS DOM manipulation.
+        - Report Info: Personal Progress/Performance. -> Goal: Track/Analyze/Motivate. -> Viz/Method: Input fields for weight/reps, PB display, Line Chart in modal for history. -> Interaction: Input data, click 'Log Set', click 'View History'. -> Justification: Enables progressive overload tracking and visual feedback on performance over time, stored locally. -> Library: Chart.js for history.
+        - Report Info: Exercise Variability. -> Goal: Adapt/Sustain. -> Viz/Method: 'Swap' button with alternative suggestions in modal. -> Interaction: Click 'Swap'. -> Justification: Provides flexibility for adapting workouts to equipment or preference, preventing boredom. -> Library/Method: Vanilla JS DOM manipulation.
+        - Report Info: User Preference. -> Goal: Accessibility/Comfort. -> Viz/Method: Dark mode toggle. -> Interaction: Click toggle. -> Justification: Enhances user experience and visual comfort. -> Library/Method: Vanilla JS DOM manipulation & Tailwind CSS dark variants.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        :root {
+            --color-bg-light: #F8F7F4; /* Light Sand */
+            --color-text-light: #333333; /* Deep Charcoal */
+            --color-card-bg-light: #FFFFFF;
+            --color-border-light: #E7E5E4; /* Stone-200 */
+            --color-accent-primary-light: #0f766e; /* Teal-800 */
+            --color-accent-secondary-light: #14b8a6; /* Teal-500 */
+            --color-button-bg-light: #E7E5E4; /* Stone-200 */
+            --color-button-text-light: #57534E; /* Stone-700 */
+            --color-button-hover-bg-light: #0d9488; /* Teal-700 */
+            --color-button-hover-text-light: #FFFFFF;
+
+            --color-bg-dark: #31363F; /* Dark Charcoal/Rock */
+            --color-text-dark: #F8F7F4; /* Light Sand */
+            --color-card-bg-dark: #40464F;
+            --color-border-dark: #5C626C;
+            --color-accent-primary-dark: #14B8A6; /* Teal-500 */
+            --color-accent-secondary-dark: #2DD4BF; /* Teal-400 */
+            --color-button-bg-dark: #4A515A;
+            --color-button-text-dark: #F8F7F4;
+            --color-button-hover-bg-dark: #0d9488; /* Teal-700 */
+            --color-button-hover-text-dark: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg-light);
+            color: var(--color-text-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body {
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-dark);
+        }
+
+        .bg-white { background-color: var(--color-card-bg-light); }
+        .dark .bg-white { background-color: var(--color-card-bg-dark); }
+
+        .text-teal-800 { color: var(--color-accent-primary-light); }
+        .dark .text-teal-800 { color: var(--color-accent-primary-dark); }
+        .text-teal-700 { color: var(--color-accent-primary-light); } /* Used for headers */
+        .dark .text-teal-700 { color: var(--color-accent-primary-dark); }
+        .text-teal-600 { color: var(--color-accent-secondary-light); }
+        .dark .text-teal-600 { color: var(--color-accent-secondary-dark); }
+
+        .text-stone-800 { color: var(--color-text-light); }
+        .dark .text-stone-800 { color: var(--color-text-dark); }
+        .text-stone-600 { color: var(--color-text-light); }
+        .dark .text-stone-600 { color: var(--color-text-dark); }
+        .text-stone-500 { color: var(--color-text-light); }
+        .dark .text-stone-500 { color: var(--color-text-dark); }
+
+        .bg-stone-200 { background-color: var(--color-button-bg-light); }
+        .dark .bg-stone-200 { background-color: var(--color-button-bg-dark); }
+        .text-stone-700 { color: var(--color-button-text-light); }
+        .dark .text-stone-700 { color: var(--color-button-text-dark); }
+        .hover\:bg-teal-600:hover { background-color: var(--color-button-hover-bg-light); }
+        .dark .hover\:bg-teal-600:hover { background-color: var(--color-button-hover-bg-dark); }
+        .hover\:text-white:hover { color: var(--color-button-hover-text-light); }
+        .dark .hover\:text-white:hover { color: var(--color-button-hover-text-dark); }
+
+        .border-stone-200 { border-color: var(--color-border-light); }
+        .dark .border-stone-200 { border-color: var(--color-border-dark); }
+        .border-teal-100 { border-color: var(--color-accent-primary-light); opacity: 0.2; }
+        .dark .border-teal-100 { border-color: var(--color-accent-primary-dark); opacity: 0.3; }
+
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .details-content {
+            display: none;
+            transition: all 0.5s ease-in-out;
+        }
+        .details-content.show {
+            display: block;
+        }
+        .exercise-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Dark Mode Toggle Switch Styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background-color: var(--color-card-bg-light);
+            margin: auto;
+            padding: 30px;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow-y: auto; /* Enable scrolling within modal content */
+            max-height: 90vh; /* Limit modal height */
+        }
+        .dark .modal-content {
+            background-color: var(--color-card-bg-dark);
+        }
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: var(--color-text-light);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .dark .close-button {
+            color: var(--color-text-dark);
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--color-accent-primary-light);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="text-stone-800 antialiased">
+
+    <div class="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+        <header class="flex justify-between items-center mb-10">
+            <div class="flex-grow text-center">
+                <h1 class="text-4xl sm:text-5xl font-bold text-teal-800 tracking-tight">Year-Long Hybrid Workout Plan</h1>
+                <p class="mt-3 text-lg text-stone-600 max-w-3xl mx-auto">A periodized routine for holistic athleticism, muscle growth, and longevity, inspired by Dr. Andy Galpin.</p>
+            </div>
+            <div class="flex items-center space-x-2 p-2 rounded-full bg-stone-100 dark:bg-stone-700 shadow-inner">
+                <span class="text-stone-700 dark:text-stone-300 text-sm font-semibold">Light</span>
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="text-stone-700 dark:text-stone-300 text-sm font-semibold">Dark</span>
+            </div>
+        </header>
+
+        <main>
+            <section id="quarter-selector" class="mb-8 bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
+                <h2 class="text-2xl font-bold text-teal-700 text-center mb-4">Select Your Training Quarter</h2>
+                <nav class="flex flex-wrap justify-center gap-2 sm:gap-4">
+                    <button class="quarter-button text-base sm:text-lg font-semibold py-2 px-6 rounded-full bg-stone-200 text-stone-700 hover:bg-teal-600 hover:text-white" data-quarter="q1">Quarter 1</button>
+                    <button class="quarter-button text-base sm:text-lg font-semibold py-2 px-6 rounded-full bg-stone-200 text-stone-700 hover:bg-teal-600 hover:text-white" data-quarter="q2">Quarter 2</button>
+                    <button class="quarter-button text-base sm:text-lg font-semibold py-2 px-6 rounded-full bg-stone-200 text-stone-700 hover:bg-teal-600 hover:text-white" data-quarter="q3">Quarter 3</button>
+                    <button class="quarter-button text-base sm:text-lg font-semibold py-2 px-6 rounded-full bg-stone-200 text-stone-700 hover:bg-teal-600 hover:text-white" data-quarter="q4">Quarter 4</button>
+                </nav>
+            </section>
+
+            <section id="quarter-overview" class="mb-12 bg-white rounded-2xl shadow-lg p-6 lg:p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                    <div class="lg:col-span-2">
+                        <h2 class="text-2xl font-bold text-teal-700 mb-4" id="quarter-title"></h2>
+                        <p class="text-stone-600 mb-6" id="quarter-goal"></p>
+                        <p class="text-stone-600" id="quarter-style"></p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="weeklyFocusChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="daily-planner" class="bg-white rounded-2xl shadow-lg">
+                <div class="p-4 sm:p-6 lg:p-8">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-teal-700 text-center mb-1">Weekly Training Schedule</h3>
+                        <p class="text-center text-stone-500 mb-4">Click a day below to see the workout plan for this quarter.</p>
+                        <nav id="day-navigation" class="flex flex-wrap justify-center gap-2 sm:gap-3">
+                        </nav>
+                    </div>
+
+                    <div id="workout-content" class="mt-8">
+                        <p class="text-center text-stone-500">Select a quarter and then a day to view your workout details.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500">
+            <p>&copy; 2025 Your Interactive Workout Planner. Consistent effort for long-term gains!</p>
+        </footer>
+
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeHistoryModal">&times;</span>
+            <h3 class="text-2xl font-bold text-teal-700 mb-4" id="historyModalTitle"></h3>
+            <div class="chart-container max-w-full h-80 md:h-96">
+                <canvas id="exerciseHistoryChart"></canvas>
+            </div>
+            <div id="historyTable" class="mt-6 overflow-x-auto">
+                <table class="min-w-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="bg-stone-100 dark:bg-stone-700">
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-stone-700 dark:text-stone-300">Date</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-stone-700 dark:text-stone-300">Weight</th>
+                            <th class="px-4 py-2 text-left text-sm font-semibold text-stone-700 dark:text-stone-300">Reps</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Swap Alternatives Modal -->
+    <div id="swapModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeSwapModal">&times;</span>
+            <h3 class="text-2xl font-bold text-teal-700 mb-4" id="swapModalTitle"></h3>
+            <ul id="alternativesList" class="space-y-3 text-stone-700 dark:text-stone-300">
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        let currentHistoryChart = null; // For the history modal chart
+
+        // --- Initial Workout Data (Augmented with history and alternatives) ---
+        const initialWorkoutData = {
+            q1: {
+                title: 'Quarter 1: Foundation & General Physical Preparedness (GPP)',
+                goal: 'Building a solid foundation of general strength, establishing a strong aerobic base, and improving overall work capacity and movement quality.',
+                style: 'Moderate intensity lifting, consistent Zone 2 cardio, introduction to basic plyometrics, and dedicated mobility work.',
+                chartData: [1, 2, 2, 1, 0, 0], // Strength, Hypertrophy, Endurance, Mobility/Skill, Speed, Power - sums to 6
+                weeklyPlan: {
+                    day1: {
+                        title: 'Day 1: Full Body Strength',
+                        goal: 'Maximize overall strength and stimulate muscle growth.',
+                        exercises: [
+                            { name: 'Barbell Squat', sets: '3', reps: '6-8', rest: '2-3 min', notes: 'Focus on heavy, controlled reps. Aim to increase weight over time.<br><b>Pillars:</b> Strength, Hypertrophy, Skill', history: [], alternatives: ['Leg Press', 'Dumbbell Goblet Squat'] },
+                            { name: 'Barbell Bench Press', sets: '3', reps: '6-8', rest: '2-3 min', notes: 'Main strength builder. Focus on controlled eccentric (lowering) and powerful concentric (pushing).<br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['Dumbbell Bench Press', 'Machine Chest Press'] },
+                            { name: 'Bent-Over Barbell Rows', sets: '3', reps: '8-10', rest: '90-120s', notes: 'Focus on squeezing shoulder blades together.<br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['T-Bar Rows', 'Seated Cable Rows'] },
+                            { name: 'Standing Overhead Press (Dumbbell)', sets: '3', reps: '8-10', rest: '90-120s', notes: 'Keep core tight, avoid excessive leaning back.<br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['Seated Dumbbell Overhead Press', 'Landmine Press'] },
+                            { name: 'Plank', sets: '3', reps: 'Max Hold', rest: '60s', notes: 'Maintain a straight line from head to heels. Focus on core stability.<br><b>Pillars:</b> Strength (Core), Skill', history: [] },
+                            { name: 'Side Plank', sets: '3', reps: 'Max Hold per side', rest: '60s', notes: 'Focus on oblique engagement and stability.<br><b>Pillars:</b> Strength (Core), Skill', history: [] }
+                        ]
+                    },
+                    day2: {
+                        title: 'Day 2: Zone 2 Aerobic Conditioning',
+                        goal: 'Building aerobic base and improving cardiovascular efficiency.',
+                        exercises: [
+                            { name: 'Activity Choice', sets: '1', reps: '45-60 min', rest: 'N/A', notes: 'Choose one: Brisk Walking, Light Jogging, Cycling, or Elliptical. Keep heart rate in Zone 2 (conversational pace).<br><b>Pillars:</b> Endurance, Mobility', history: [] }
+                        ]
+                    },
+                    day3: {
+                        title: 'Day 3: Upper Body Hypertrophy & Stability',
+                        goal: 'Maximize upper body muscle growth and enhance joint stability.',
+                        exercises: [
+                            { name: 'Incline Dumbbell Press', sets: '3', reps: '10-15', rest: '60-90s', notes: 'Focus on chest contraction and controlled movement.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Machine Chest Press', 'Cable Crossovers'] },
+                            { name: 'Lat Pulldowns', sets: '3', reps: '10-15', rest: '60-90s', notes: 'Focus on pulling with your lats, not just your arms.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Close-Grip Pulldowns', 'Straight-Arm Pulldowns'] },
+                            { name: 'Dumbbell Lateral Raises', sets: '3', reps: '12-18', rest: '45-60s', notes: 'Isolate the side deltoids for broader shoulders. Avoid shrugging.<br><b>Pillars:</b> Hypertrophy, Aesthetics', history: [], alternatives: ['Cable Lateral Raises', 'Machine Lateral Raises'] },
+                            { name: 'Dumbbell Bicep Curls', sets: '3', reps: '10-15', rest: '45-60s', notes: 'Controlled movement, avoid swinging. Focus on the bicep squeeze.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Hammer Curls', 'Preacher Curls'] },
+                            { name: 'Overhead Tricep Extensions', sets: '3', reps: '10-15', rest: '45-60s', notes: 'Extend fully at the top, feel the triceps stretch at the bottom.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Cable Tricep Pushdowns', 'Skullcrushers'] },
+                            { name: 'Band Pull-Aparts', sets: '3', reps: '20-25', rest: '30s', notes: 'Excellent for shoulder health and posture. Squeeze your shoulder blades together.<br><b>Pillars:</b> Skill (Shoulder Health), Mobility', history: [] }
+                        ]
+                    },
+                    day4: {
+                        title: 'Day 4: Active Recovery & Mobility',
+                        goal: 'Promote recovery, improve range of motion, and enhance body awareness.',
+                        exercises: [
+                            { name: 'Mobility Circuit', sets: '1', reps: '20-30 min', rest: 'N/A', notes: 'Perform movements like Cat-Cow, Thoracic Rotations, Hip Circles, Shoulder Dislocates with a band, Ankle Mobility Drills. Focus on controlled movement and breath.<br><b>Pillars:</b> Mobility, Skill, Recovery', history: [] }
+                        ]
+                    },
+                    day5: {
+                        title: 'Day 5: Lower Body Hypertrophy & Basic Power',
+                        goal: 'Maximize lower body muscle growth and introduce basic explosive movements.',
+                        exercises: [
+                            { name: 'Leg Press', sets: '3', reps: '10-15', rest: '60-90s', notes: 'Focus on quad and glute contraction, controlled lowering.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Hack Squat', 'Goblet Squat'] },
+                            { name: 'Romanian Deadlift (Dumbbell)', sets: '3', reps: '10-15', rest: '60-90s', notes: 'Focus on hamstring stretch and glute squeeze at the top. Keep a slight bend in knees.<br><b>Pillars:</b> Hypertrophy, Strength', history: [], alternatives: ['Good Mornings', 'Glute-Ham Raises'] },
+                            { name: 'Leg Extensions', sets: '3', reps: '12-18', rest: '60s', notes: 'Isolate quads. Squeeze at the top.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Sissy Squats (bodyweight)'] },
+                            { name: 'Leg Curls', sets: '3', reps: '12-18', rest: '60s', notes: 'Isolate hamstrings. Focus on squeeze.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Stability Ball Leg Curls'] },
+                            { name: 'Box Jumps (low box)', sets: '3', reps: '5-8', rest: '90s', notes: 'Focus on soft landing and explosive jump. Step down, don\'t jump down.<br><b>Pillars:</b> Power (intro)', history: [], alternatives: ['Broad Jumps', 'Tuck Jumps'] },
+                            { name: 'Standing Calf Raises', sets: '3', reps: '15-20', rest: '45s', notes: 'Full range of motion, emphasize stretch at bottom and squeeze at top.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Seated Calf Raises'] }
+                        ]
+                    },
+                    day6: {
+                        title: 'Day 6: Mixed Modality Conditioning',
+                        goal: 'Improve overall work capacity and introduce varied conditioning stimuli.',
+                        exercises: [
+                            { name: 'Choose Activity', sets: '1', reps: '30-45 min', rest: 'Varies', notes: 'Choose one:<br><b>Option 1 (Circuit):</b> 3-4 rounds of Burpees (8-10 reps), Kettlebell Swings (15-20 reps), Jump Rope (60s), Plank (60s) - minimal rest between exercises, 2-3 min rest between rounds.<br><b>Option 2 (Sprints):</b> 6-8 x (20s sprint / 60s walk) intervals on treadmill or track.<br><b>Option 3 (Sport):</b> Play a casual sport (basketball, soccer) for enjoyment and general movement.<br><b>Pillars:</b> Endurance, Speed, Power, Skill', history: [] }
+                        ]
+                    },
+                    day7: {
+                        title: 'Day 7: Full Rest',
+                        goal: 'Complete rest, focus on sleep, nutrition, and mental relaxation.',
+                        exercises: [
+                            { name: 'Rest & Recharge', sets: 'N/A', reps: 'All Day', rest: 'N/A', notes: 'This day is crucial for recovery and preventing burnout. Focus on sleep, hydration, and nutrient-dense meals.<br><b>Pillars:</b> Recovery', history: [] }
+                        ]
+                    }
+                }
+            },
+            q2: {
+                title: 'Quarter 2: Strength & Power Emphasis',
+                goal: 'Increasing maximal strength in key lifts and developing explosive power for faster, more forceful movements.',
+                style: 'Heavier compound lifting, more dedicated and varied plyometrics, short, intense sprint work, maintaining hypertrophy with accessory work.',
+                chartData: [2, 1, 1, 1, 1, 1], // Strength, Hypertrophy, Endurance, Mobility/Skill, Speed, Power - sums to 7 if recovery is counted, but Chart.js data is for non-recovery days
+                weeklyPlan: {
+                    day1: {
+                        title: 'Day 1: Upper Body Max Strength & Power',
+                        goal: 'Maximize upper body force production and explosive power.',
+                        exercises: [
+                            { name: 'Barbell Bench Press', sets: '4', reps: '3-5', rest: '3-4 min', notes: 'Heavier than Q1. Focus on maximal strength. <br><b>Pillars:</b> Strength, Power, Hypertrophy', history: [], alternatives: ['Dumbbell Bench Press', 'Floor Press'] },
+                            { name: 'Clapping Push-ups / Plyo Push-ups', sets: '3', reps: '5-8', rest: '90s', notes: 'Explosive push, hands leaving the floor. <br><b>Pillars:</b> Power, Speed', history: [], alternatives: ['Medicine Ball Chest Pass', 'Band-Assisted Plyo Push-ups'] },
+                            { name: 'Weighted Pull-ups (or heavier Lat Pulldowns)', sets: '4', reps: '4-6', rest: '3-4 min', notes: 'Focus on heavy, controlled reps for strength. <br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['Weighted Chin-ups', 'Heavy Bent-Over Rows'] },
+                            { name: 'Barbell Overhead Press (Standing)', sets: '3', reps: '5-8', rest: '2-3 min', notes: 'Maintain strict form with heavier loads. <br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['Seated Dumbbell Press (heavy)', 'Z-Press'] },
+                            { name: 'Dumbbell Rows (Single Arm)', sets: '3', reps: '6-10 per arm', rest: '60-90s', notes: 'Focus on isolating the back muscle, keeping core stable. <br><b>Pillars:</b> Hypertrophy, Strength', history: [], alternatives: ['Chest-Supported Dumbbell Rows', 'Meadows Rows'] },
+                            { name: 'Overhead Tricep Extensions (Cable or Dumbbell)', sets: '3', reps: '10-15', rest: '60s', notes: 'Squeeze triceps at full extension. <br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Close-Grip Bench Press', 'Skullcrushers'] }
+                        ]
+                    },
+                    day2: {
+                        title: 'Day 2: High-Intensity Intervals & Agility',
+                        goal: 'Improve sprint speed, change of direction, and anaerobic endurance.',
+                        exercises: [
+                            { name: 'Sprints (20s max sprint / 90s active recovery walk)', sets: '8-10', reps: '20s', rest: '90s', notes: 'Max effort during sprint. <br><b>Pillars:</b> Speed, Endurance (HIIT), Power', history: [] },
+                            { name: 'Agility Drills (Cone Drills, Ladder Drills)', sets: '1', reps: '15-20 min', rest: 'Varies', notes: 'Focus on quick changes of direction and acceleration/deceleration. <br><b>Pillars:</b> Speed, Skill', history: [] }
+                        ]
+                    },
+                    day3: {
+                        title: 'Day 3: Lower Body Max Strength & Power',
+                        goal: 'Develop maximal lower body strength and explosive power for jumping and lifting.',
+                        exercises: [
+                            { name: 'Barbell Back Squat', sets: '4', reps: '3-5', rest: '3-4 min', notes: 'Heavier than Q1. Focus on depth and powerful drive up. <br><b>Pillars:</b> Strength, Power', history: [], alternatives: ['Front Squat (heavy)', 'Leg Press (heavy)'] },
+                            { name: 'Conventional or Sumo Deadlift', sets: '3', reps: '3-5', rest: '4-5 min', notes: 'Prioritize perfect form with maximal effort. <br><b>Pillars:</b> Strength', history: [], alternatives: ['Trap Bar Deadlift', 'Rack Pulls'] },
+                            { name: 'Broad Jumps', sets: '3', reps: '4-6', rest: '90-120s', notes: 'Focus on maximal horizontal distance. <br><b>Pillars:</b> Power, Speed', history: [], alternatives: ['Vertical Jumps', 'Plyometric Lunges'] },
+                            { name: 'Bulgarian Split Squats (Dumbbell)', sets: '3', reps: '6-8 per leg', rest: '90s', notes: 'Excellent for unilateral strength and balance. <br><b>Pillars:</b> Strength, Hypertrophy, Skill', history: [], alternatives: ['Walking Lunges (heavy)', 'Pistol Squat (assisted)'] },
+                            { name: 'Leg Curls', sets: '3', reps: '8-12', rest: '60s', notes: 'Isolate hamstrings for strength and hypertrophy. <br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Glute-Ham Raises', 'Nordic Hamstring Curls'] },
+                            { name: 'Standing Calf Raises (with pause at top)', sets: '3', reps: '10-15', rest: '60s', notes: 'Focus on peak contraction and controlled eccentric. <br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Seated Calf Raises', 'Calf Press on Leg Press'] }
+                        ]
+                    },
+                    day4: {
+                        title: 'Day 4: Active Recovery & Mobility',
+                        goal: 'Promote recovery and improve range of motion, especially after heavy lifting days.',
+                        exercises: [
+                            { name: 'Mobility Circuit', sets: '1', reps: '20-30 min', rest: 'N/A', notes: 'Similar to Q1, but focus on areas feeling tight from heavier lifting (hips, glutes, upper back).<br><b>Pillars:</b> Mobility, Skill, Recovery', history: [] }
+                        ]
+                    },
+                    day5: {
+                        title: 'Day 5: Full Body Power & Muscular Endurance',
+                        goal: 'Build explosive power across the full body and improve ability to sustain moderate efforts.',
+                        exercises: [
+                            { name: 'Kettlebell Swings (Explosive)', sets: '4', reps: '10-15', rest: '60-90s', notes: 'Focus on powerful hip hinge and snap. <br><b>Pillars:</b> Power, Endurance (Muscular)', history: [], alternatives: ['Box Jumps', 'Broad Jumps'] },
+                            { name: 'Push Press (Barbell or Dumbbell)', sets: '3', reps: '8-12', rest: '90s', notes: 'Uses leg drive for an overhead press. <br><b>Pillars:</b> Power, Strength, Hypertrophy', history: [], alternatives: ['Dumbbell Thrusters', 'Clean & Jerk (light)'] },
+                            { name: 'Box Jumps (higher box)', sets: '3', reps: '5-7', rest: '90s', notes: 'Focus on maximal vertical jump. <br><b>Pillars:</b> Power, Speed', history: [], alternatives: ['Vertical Jumps', 'Plyo Push-ups'] },
+                            { name: 'Medicine Ball Slams', sets: '3', reps: '10-15', rest: '60s', notes: 'Full body power exercise. <br><b>Pillars:</b> Power, Strength (Core)', history: [], alternatives: ['Medicine Ball Rotational Throws', 'Battle Ropes'] },
+                            { name: 'Farmer\'s Carries', sets: '3', reps: '40-60 feet', rest: '90s', notes: 'Heavy dumbbells/kettlebells for grip and core endurance. <br><b>Pillars:</b> Strength (Grip, Core), Endurance', history: [] },
+                            { name: 'Burpees', sets: '3', reps: '8-12', rest: '60s', notes: 'Focus on speed through the movement. <br><b>Pillars:</b> Power, Endurance, Speed', history: [] }
+                        ]
+                    },
+                    day6: {
+                        title: 'Day 6: Moderate Endurance / Cross-Training',
+                        goal: 'Maintain cardiovascular fitness and explore different forms of movement.',
+                        exercises: [
+                            { name: 'Activity Choice', sets: '1', reps: '45-60 min', rest: 'N/A', notes: 'Choose a steady-state activity like cycling, swimming, or a longer, moderate-intensity hike. Focus on consistent effort. <br><b>Pillars:</b> Endurance, Skill', history: [] }
+                        ]
+                    },
+                    day7: {
+                        title: 'Day 7: Full Rest',
+                        goal: 'Complete rest for maximal recovery after an intense week.',
+                        exercises: [
+                            { name: 'Rest & Recharge', sets: 'N/A', reps: 'All Day', rest: 'N/A', notes: 'Essential for muscle repair and central nervous system recovery. <br><b>Pillars:</b> Recovery', history: [] }
+                        ]
+                    }
+                }
+            },
+            q3: {
+                title: 'Quarter 3: Hypertrophy & Muscular Endurance',
+                goal: 'Maximizing muscle growth (aesthetics) and improving muscular endurance (ability to sustain effort with moderate loads).',
+                style: 'Higher volume lifting with moderate weights, more isolation exercises, supersets/drop sets where appropriate, and sustained conditioning efforts.',
+                chartData: [1, 3, 1, 1, 0, 0], // Strength, Hypertrophy, Endurance, Mobility/Skill, Speed, Power - sums to 6
+                weeklyPlan: {
+                    day1: {
+                        title: 'Day 1: Upper Body Hypertrophy Focused',
+                        goal: 'Stimulate maximal upper body muscle growth with higher volume and varied movements.',
+                        exercises: [
+                            { name: 'Dumbbell Bench Press (moderate weight)', sets: '4', reps: '10-15', rest: '90s', notes: 'Focus on mind-muscle connection and chest contraction.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Machine Chest Press', 'Cable Crossovers'] },
+                            { name: 'Incline Dumbbell Flyes', sets: '3', reps: '12-15', rest: '60s', notes: 'Isolate the chest. Focus on a good stretch.<br><b>Pillars:</b> Hypertrophy', history: [] },
+                            { name: 'Seated Cable Rows', sets: '4', reps: '10-15', rest: '90s', notes: 'Vary grip (wide, close, neutral) for different back activation.<br><b>Pillars:</b> Hypertrophy, Strength', history: [], alternatives: ['T-Bar Rows (lighter)', 'Single-Arm Dumbbell Rows'] },
+                            { name: 'Close-Grip Lat Pulldowns', sets: '3', reps: '12-15', rest: '60s', notes: 'Targets the lats and biceps more. Squeeze.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Straight-Arm Pulldowns', 'Reverse-Grip Pulldowns'] },
+                            { name: 'Dumbbell Lateral Raises (higher reps)', sets: '3', reps: '15-20', rest: '45s', notes: 'Isolate side deltoids for width. Control the eccentric.<br><b>Pillars:</b> Hypertrophy, Aesthetics', history: [], alternatives: ['Cable Lateral Raises', 'Machine Lateral Raises'] },
+                            { name: 'Cable Tricep Pushdowns', sets: '3', reps: '12-18', rest: '45s', notes: 'Focus on full extension and tricep squeeze.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Overhead Rope Extensions', 'Close-Grip Push-ups'] },
+                            { name: 'Barbell Bicep Curls', sets: '3', reps: '10-15', rest: '45s', notes: 'Keep elbows tucked, avoid swinging.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Dumbbell Hammer Curls', 'Preacher Curls'] }
+                        ]
+                    },
+                    day2: {
+                        title: 'Day 2: Steady State Endurance & Core',
+                        goal: 'Enhance cardiovascular endurance and strengthen the core for stability.',
+                        exercises: [
+                            { name: 'Zone 2 Cardio Activity', sets: '1', reps: '60 min', rest: 'N/A', notes: 'Running, cycling, or rowing. Maintain a consistent, conversational pace to improve aerobic capacity.<br><b>Pillars:</b> Endurance', history: [] },
+                            { name: 'Core Finisher', sets: '3 rounds', reps: 'See notes', rest: '60s between rounds', notes: 'Perform each exercise consecutively, then rest. <br><b>Exercises:</b> Hanging Leg Raises (10-15 reps), Russian Twists (15-20 reps per side), Ab Rollouts (8-12 reps).<br><b>Pillars:</b> Strength (Core), Skill (Control)', history: [] }
+                        ]
+                    },
+                    day3: {
+                        title: 'Day 3: Lower Body Hypertrophy Focused',
+                        goal: 'Maximize lower body muscle growth with high volume and specific isolation.',
+                        exercises: [
+                            { name: 'Leg Press (higher volume)', sets: '4', reps: '12-18', rest: '90s', notes: 'Focus on powerful push and controlled eccentric.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Hack Squat', 'Goblet Squat (lighter, higher reps)'] },
+                            { name: 'Leg Extensions', sets: '3', reps: '15-20', rest: '60s', notes: 'Isolate quads. Squeeze at the top for peak contraction.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Sissy Squats (bodyweight)'] },
+                            { name: 'Lying Leg Curls', sets: '3', reps: '15-20', rest: '60s', notes: 'Isolate hamstrings. Feel the squeeze at the peak.<br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Seated Leg Curls', 'Stability Ball Leg Curls'] },
+                            { name: 'Glute Bridges (Barbell or Dumbbell)', sets: '3', reps: '12-15', rest: '60s', notes: 'Focus on glute contraction at the top. <br><b>Pillars:</b> Hypertrophy, Strength', history: [], alternatives: ['Hip Thrusts (machine/barbell)', 'Cable Pull-Throughs'] },
+                            { name: 'Walking Lunges (moderate weight)', sets: '3', reps: '12-15 per leg', rest: '90s', notes: 'Maintain balance and control throughout.<br><b>Pillars:</b> Hypertrophy, Strength', history: [], alternatives: ['Static Dumbbell Lunges', 'Reverse Lunges'] },
+                            { name: 'Seated Calf Raises (high reps, controlled)', sets: '3', reps: '20-30', rest: '45s', notes: 'Emphasize stretch at bottom and sustained contraction at top. <br><b>Pillars:</b> Hypertrophy', history: [], alternatives: ['Standing Calf Raises', 'Calf Press on Leg Press'] }
+                        ]
+                    },
+                    day4: {
+                        title: 'Day 4: Active Recovery & Mobility',
+                        goal: 'Aid recovery and improve overall body flexibility and movement quality.',
+                        exercises: [
+                            { name: 'Mobility/Flexibility Session', sets: '1', reps: '20-30 min', rest: 'N/A', notes: 'Focus on areas feeling tight from high-volume training. Could include foam rolling, dynamic stretches, or a light yoga session.<br><b>Pillars:</b> Mobility, Skill, Recovery', history: [] }
+                        ]
+                    },
+                    day5: {
+                        title: 'Day 5: Full Body Muscular Endurance Circuit',
+                        goal: 'Improve the muscles\' ability to sustain repeated efforts with moderate loads.',
+                        exercises: [
+                            { name: 'Circuit Training', sets: '3-4 rounds', reps: 'See notes', rest: '60-90s between rounds', notes: 'Perform exercises consecutively, then rest. Focus on continuous movement with good form.<br><b>Exercises:</b> Goblet Squat (15-20 reps), Push-ups (Max reps), Inverted Rows (Bodyweight - Max reps), Kettlebell Swings (light-moderate - 15-20 reps), Dumbbell Thrusters (light dumbbells - 10-15 reps), Mountain Climbers (45-60 seconds).<br><b>Pillars:</b> Muscular Endurance, Hypertrophy, Power', history: [] }
+                        ]
+                    },
+                    day6: {
+                        title: 'Day 6: Moderate-Long Endurance (Enjoyable Activity)',
+                        goal: 'Maintain cardiovascular fitness through enjoyable, sustained activities.',
+                        exercises: [
+                            { name: 'Long Activity', sets: '1', reps: '60-90 min', rest: 'N/A', notes: 'Choose an enjoyable activity like a long walk/hike in nature, extended cycling session, or longer swim. Focus on consistent, comfortable effort.<br><b>Pillars:</b> Endurance, Skill, Mobility', history: [] }
+                        ]
+                    },
+                    day7: {
+                        title: 'Day 7: Full Rest',
+                        goal: 'Complete physical and mental recovery from the week\'s high-volume training.',
+                        exercises: [
+                            { name: 'Rest & Recharge', sets: 'N/A', reps: 'All Day', rest: 'N/A', notes: 'Crucial for muscle repair, reducing fatigue, and preventing overtraining. Prioritize sleep.<br><b>Pillars:</b> Recovery', history: [] }
+                        ]
+                    }
+                }
+            },
+            q4: {
+                title: 'Quarter 4: Athletic Performance & Peak Conditioning',
+                goal: 'Integrating all pillars. High-intensity conditioning, refined speed and agility, maintaining strength and hypertrophy, and peaking overall athletic capacity.',
+                style: 'Mixed modalities, complex circuits, varied high-intensity conditioning, skill-specific drills, and fine-tuning strength.',
+                chartData: [1, 1, 1, 1, 1, 1], // Strength, Hypertrophy, Endurance, Mobility/Skill, Speed, Power - sums to 6
+                weeklyPlan: {
+                    day1: {
+                        title: 'Day 1: Hybrid Strength & Power',
+                        goal: 'Develop integrated strength and power with complex movements.',
+                        exercises: [
+                            { name: 'Power Cleans (or Hang Cleans)', sets: '4', reps: '3-5', rest: '2-3 min', notes: 'Focus on technique and explosive pull. If unfamiliar, substitute with more Box Jumps/Broad Jumps or heavy Kettlebell Swings.<br><b>Pillars:</b> Power, Strength, Skill', history: [], alternatives: ['Clean & Jerk (light)', 'Snatch (light)'] },
+                            { name: 'Barbell Bench Press', sets: '3', reps: '5-8', rest: '2-3 min', notes: 'Maintain strength. Focus on controlled movement.<br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['Weighted Dips', 'Machine Chest Press'] },
+                            { name: 'Pull-ups (varied grips)', sets: '3', reps: 'Max Reps', rest: '90-120s', notes: 'Challenge yourself with different grips (wide, neutral, close).<br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['Weighted Chin-ups', 'Heavy Lat Pulldowns'] },
+                            { name: 'Push Press (Barbell)', sets: '3', reps: '5-8', rest: '90s', notes: 'Uses leg drive for an overhead press, integrating lower and upper body.<br><b>Pillars:</b> Power, Strength', history: [], alternatives: ['Dumbbell Thrusters', 'Strict Overhead Press'] },
+                            { name: 'Box Jumps (moderate height, maximal effort)', sets: '3', reps: '5', rest: '90s', notes: 'Focus on explosive height and soft landing. <br><b>Pillars:</b> Power, Speed', history: [], alternatives: ['Broad Jumps', 'Vertical Jumps'] },
+                            { name: 'Core: Dragon Flags or L-sits progressions', sets: '3', reps: 'To Failure', rest: '60s', notes: 'Advanced core strength and control. Choose a progression appropriate for your level.<br><b>Pillars:</b> Strength (Core), Skill', history: [] }
+                        ]
+                    },
+                    day2: {
+                        title: 'Day 2: Speed & Agility Day',
+                        goal: 'Refine maximal speed, quickness, and change of direction skills.',
+                        exercises: [
+                            { name: 'Flying Sprints (30m full sprint with 10-20m build-up)', sets: '8-10', reps: '30m', rest: '90-120s', notes: 'Focus on max velocity.<br><b>Pillars:</b> Speed, Power', history: [] },
+                            { name: 'Agility Drills (Shuttles, T-Drill, Pro Agility)', sets: '1', reps: '15-20 min', rest: 'Varies', notes: 'Focus on precise footwork and quick turns. <br><b>Pillars:</b> Speed, Skill', history: [] },
+                            { name: 'Medicine Ball Rotational Throws', sets: '3', reps: '8-10 per side', rest: '60s', notes: 'Explosive core power for rotation. <br><b>Pillars:</b> Power, Strength (Core)', history: [] },
+                            { name: 'Conditioning Finisher: Fartlek Run', sets: '1', reps: '10-15 min', rest: 'N/A', notes: 'Unstructured intervals – sprint, jog, walk, repeat based on how you feel. <br><b>Pillars:</b> Endurance, Speed', history: [] }
+                        ]
+                    },
+                    day3: {
+                        title: 'Day 3: Strength Endurance & Body Comp',
+                        goal: 'Improve muscular endurance and maintain strength, contributing to body composition.',
+                        exercises: [
+                            { name: 'Deadlift (Conventional or Trap Bar, moderate weight)', sets: '3', reps: '6-8', rest: '2 min', notes: 'Focus on clean reps and good form. <br><b>Pillars:</b> Strength, Hypertrophy', history: [], alternatives: ['Romanian Deadlift (Barbell)', 'Good Mornings'] },
+                            { name: 'Push-ups (feet elevated or weighted)', sets: '3', reps: 'Max Reps', rest: '90s', notes: 'Increase challenge for muscular endurance. <br><b>Pillars:</b> Strength (Muscular), Hypertrophy', history: [] },
+                            { name: 'Walking Lunges (challenging weight)', sets: '3', reps: '8-10 per leg', rest: '90s', notes: 'Unilateral strength and balance. <br><b>Pillars:</b> Strength, Hypertrophy, Skill', history: [], alternatives: ['Bulgarian Split Squats', 'Step-Ups'] },
+                            { name: 'Inverted Rows (bodyweight)', sets: '3', reps: 'Max Reps', rest: '90s', notes: 'Great for upper back strength endurance. <br><b>Pillars:</b> Strength (Muscular), Hypertrophy', history: [] },
+                            { name: 'Leg Extensions (controlled)', sets: '3', reps: '10-15', rest: '60s', notes: 'Quad isolation with strict control. <br><b>Pillars:</b> Hypertrophy', history: [] },
+                            { name: 'Hamstring Curls (controlled)', sets: '3', reps: '10-15', rest: '60s', notes: 'Hamstring isolation with strict control. <br><b>Pillars:</b> Hypertrophy', history: [] },
+                            { name: 'Wall Sits', sets: '3', reps: '60-90s hold', rest: '60s', notes: 'Isometric quad endurance. <br><b>Pillars:</b> Endurance (Muscular)', history: [] }
+                        ]
+                    },
+                    day4: {
+                        title: 'Day 4: Active Recovery & Integrated Mobility',
+                        goal: 'Promote active recovery and enhance overall movement quality through integrated patterns.',
+                        exercises: [
+                            { name: 'Integrated Movement Session', sets: '1', reps: '45-60 min', rest: 'N/A', notes: 'Choose from: Flow yoga or dynamic mobility routine, light swimming with focus on range of motion, extended session of animal flow movements (Bear Crawls, Crab Walks, Ape Walks) for full-body coordination and mobility.<br><b>Pillars:</b> Mobility, Skill, Recovery', history: [] }
+                        ]
+                    },
+                    day5: {
+                        title: 'Day 5: High-Intensity Metabolic Conditioning',
+                        goal: 'Maximize cardiovascular fitness and work capacity with intense, varied intervals.',
+                        exercises: [
+                            { name: 'EMOM (Every Minute On the Minute) or AMRAP (As Many Rounds As Possible)', sets: '1', reps: '20 min', rest: 'Varies', notes: 'Choose one format:<br><b>Option 1 (EMOM 20 min):</b> Min 1: 10 Burpees, Min 2: 15 Kettlebell Swings, Min 3: 15 Wall Balls (or Goblet Squats with overhead press), Min 4: 10 Box Jumps. (Repeat 5 rounds)<br><b>Option 2 (AMRAP 20 min):</b> Row 200m, 10 Push-ups, 10 Air Squats, Run 100m. <br><b>Pillars:</b> Endurance (HIIT), Power, Speed, Strength (Muscular)', history: [] }
+                        ]
+                    },
+                    day6: {
+                        title: 'Day 6: Skill Development & Play',
+                        goal: 'Refine specific physical skills and enjoy movement in varied contexts.',
+                        exercises: [
+                            { name: 'Skill Focus / Active Play', sets: '1', reps: '60-90 min', rest: 'N/A', notes: 'Choose from: Practice bodyweight skills (Handstand progressions, L-sit, Pistol Squat), Martial Arts or Dance class, Rock Climbing or Bouldering, Longer, varied run with hills and varied terrain, Team Sport Game, Dedicated session to improve a specific lift\'s technique. <br><b>Pillars:</b> Skill, Mobility, Strength, Endurance (integrated), Speed, Power', history: [] }
+                        ]
+                    },
+                    day7: {
+                        title: 'Day 7: Full Rest',
+                        goal: 'Complete physical and mental recovery from a demanding week.',
+                        exercises: [
+                            { name: 'Rest & Recharge', sets: 'N/A', reps: 'All Day', rest: 'N/A', notes: 'Prioritize deep sleep and good nutrition to allow your body to adapt and strengthen. <br><b>Pillars:</b> Recovery', history: [] }
+                        ]
+                    }
+                }
+            }
+        };
+
+        const quarterButtons = document.querySelectorAll('.quarter-button');
+        const quarterTitle = document.getElementById('quarter-title');
+        const quarterGoal = document.getElementById('quarter-goal');
+        const quarterStyle = document.getElementById('quarter-style');
+        const dayNavigation = document.getElementById('day-navigation');
+        const workoutContent = document.getElementById('workout-content');
+        const chartContainerDiv = document.querySelector('.chart-container');
+
+        const historyModal = document.getElementById('historyModal');
+        const closeHistoryModalButton = document.getElementById('closeHistoryModal');
+        const historyModalTitle = document.getElementById('historyModalTitle');
+        const exerciseHistoryChartCanvas = document.getElementById('exerciseHistoryChart');
+        const historyTableBody = document.getElementById('historyTableBody');
+
+        const swapModal = document.getElementById('swapModal');
+        const closeSwapModalButton = document.getElementById('closeSwapModal');
+        const swapModalTitle = document.getElementById('swapModalTitle');
+        const alternativesList = document.getElementById('alternativesList');
+
+        const darkModeToggle = document.getElementById('darkModeToggle');
+
+        let currentQuarterKey = 'q1'; // Track currently selected quarter
+
+        // --- Local Storage Management ---
+        const LOCAL_STORAGE_KEY = 'workoutPlannerData';
+
+        const loadWorkoutData = () => {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                // Merge saved history with initial structure to ensure all exercises exist
+                const parsedData = JSON.parse(savedData);
+                Object.keys(initialWorkoutData).forEach(qKey => {
+                    Object.keys(initialWorkoutData[qKey].weeklyPlan).forEach(dKey => {
+                        initialWorkoutData[qKey].weeklyPlan[dKey].exercises.forEach((initialEx, exIndex) => {
+                            const savedEx = parsedData[qKey]?.weeklyPlan[dKey]?.exercises[exIndex];
+                            if (savedEx && savedEx.name === initialEx.name && savedEx.history) {
+                                initialEx.history = savedEx.history; // Load history
+                            }
+                        });
+                    });
+                });
+                return initialWorkoutData; // Return merged data
+            }
+            return initialWorkoutData; // Return fresh data if no saved data
+        };
+
+        let workoutData = loadWorkoutData(); // Load data on script start
+
+        const saveWorkoutData = () => {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(workoutData));
+        };
+
+        // --- Dark Mode Logic ---
+        const enableDarkMode = () => {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            if (currentChart) updateChartColors(currentChart, 'dark');
+            if (currentHistoryChart) updateChartColors(currentHistoryChart, 'dark');
+        };
+
+        const disableDarkMode = () => {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            if (currentChart) updateChartColors(currentChart, 'light');
+            if (currentHistoryChart) updateChartColors(currentHistoryChart, 'light');
+        };
+
+        const updateChartColors = (chartInstance, theme) => {
+            const isDark = theme === 'dark';
+            const textColor = isDark ? '#F8F7F4' : '#333333';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            if (chartInstance.options.plugins && chartInstance.options.plugins.legend && chartInstance.options.plugins.legend.labels) {
+                chartInstance.options.plugins.legend.labels.color = textColor;
+            }
+            if (chartInstance.options.scales) {
+                Object.values(chartInstance.options.scales).forEach(scale => {
+                    scale.ticks.color = textColor;
+                    scale.grid.color = gridColor;
+                    scale.borderColor = gridColor;
+                });
+            }
+            chartInstance.update();
+        };
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                enableDarkMode();
+            } else {
+                disableDarkMode();
+            }
+        });
+
+        // Apply theme on initial load
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            darkModeToggle.checked = true;
+            enableDarkMode();
+        } else {
+            darkModeToggle.checked = false;
+            disableDarkMode();
+        }
+
+
+        // --- Chart Management (for Doughnut Chart) ---
+        const updateChart = (chartData) => {
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const oldCanvas = document.getElementById('weeklyFocusChart');
+            if (oldCanvas) {
+                oldCanvas.remove();
+            }
+            const newCanvas = document.createElement('canvas');
+            newCanvas.id = 'weeklyFocusChart';
+            chartContainerDiv.appendChild(newCanvas);
+
+            const weeklyFocusCtx = newCanvas.getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#F8F7F4' : '#333333';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+
+            currentChart = new Chart(weeklyFocusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Strength', 'Hypertrophy', 'Endurance', 'Mobility/Skill', 'Speed', 'Power', 'Recovery'],
+                    datasets: [{
+                        label: 'Weekly Training Focus (Days)',
+                        data: [
+                            chartData[0], // Strength
+                            chartData[1], // Hypertrophy
+                            chartData[2], // Endurance
+                            chartData[3], // Mobility/Skill
+                            chartData[4], // Speed
+                            chartData[5], // Power
+                            1 // Recovery is always 1 day
+                        ],
+                        backgroundColor: [
+                            '#0f766e', // Strength - Teal-800
+                            '#14b8a6', // Hypertrophy - Teal-500
+                            '#f97316', // Endurance - Orange-500
+                            '#84cc16', // Mobility/Skill - Lime-500
+                            '#3b82f6', // Speed - Blue-500
+                            '#ef4444', // Power - Red-500
+                            '#a8a29e'  // Recovery - Stone-400
+                        ],
+                        borderColor: isDark ? '#31363F' : '#f8f7f4', // Match background
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                },
+                                color: textColor, // Set text color for legend labels
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    const colors = data.datasets[0].backgroundColor;
+                                    const borders = data.datasets[0].borderColor;
+
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map(function(label, i) {
+                                            const value = data.datasets[0].data[i];
+                                            return {
+                                                text: `${label}: ${value} day(s)`,
+                                                fillStyle: colors[i],
+                                                strokeStyle: borders, // Use the dataset border for legend item border
+                                                lineWidth: 1,
+                                                hidden: !chart.isDatasetVisible(0) || value === 0,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + ' day(s)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            updateChartColors(currentChart, isDark ? 'dark' : 'light'); // Apply colors after chart creation
+        };
+
+        // --- Progressive Overload Logic ---
+        const calculateNextWeekTarget = (exercise) => {
+            if (exercise.history.length === 0) {
+                return 'Log a set first!';
+            }
+            const lastSet = exercise.history[exercise.history.length - 1];
+            const targetReps = parseInt(exercise.reps.split('-')[0] || exercise.reps, 10);
+
+            // Simple Progressive Overload Logic:
+            // If hit or exceeded target reps, increase weight slightly (+2.5kg for strength, +1.25kg for hypertrophy)
+            // If within 1-2 reps of target, try to hit target reps with same weight next time
+            // Otherwise, keep same weight, focus on form
+            let suggestedWeight = lastSet.weight;
+            let suggestedReps = targetReps;
+
+            if (lastSet.reps >= targetReps) {
+                if (exercise.sets.includes('4-6') || exercise.sets.includes('3-5')) { // Strength focus
+                    suggestedWeight = parseFloat(lastSet.weight) + 2.5; // Small weight increase
+                } else { // Hypertrophy focus
+                    suggestedWeight = parseFloat(lastSet.weight) + 1.25; // Smaller weight increase
+                }
+                suggestedReps = targetReps; // Aim for original target reps with new weight
+                return `Next Week: ${suggestedWeight}kg x ${suggestedReps} reps (or try +1-2 reps)`;
+            } else if (lastSet.reps >= targetReps - 2) { // Close to target, try for more reps
+                 return `Next Week: Same weight, aim for ${targetReps} reps`;
+            } else {
+                 return `Next Week: Same weight, focus on perfect form`;
+            }
+        };
+
+        // --- Display Workout Details ---
+        const displayWorkout = (dayKey, currentQuarterData) => {
+            workoutContent.innerHTML = '';
+
+            const dayData = currentQuarterData.weeklyPlan[dayKey];
+
+            if (!dayData) {
+                workoutContent.innerHTML = '<p class="text-center text-red-600">Error: Workout data not found for this day.</p>';
+                return;
+            }
+
+            const header = document.createElement('div');
+            header.className = 'text-center border-b-2 border-teal-100 pb-4 mb-6';
+            header.innerHTML = `
+                <h4 class="text-3xl font-bold text-stone-800 dark:text-stone-100">${dayData.title}</h4>
+                <p class="mt-2 text-stone-600 dark:text-stone-300">${dayData.goal}</p>
+            `;
+            workoutContent.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+            workoutContent.appendChild(grid);
+
+            dayData.exercises.forEach((exercise, exIndex) => {
+                const card = document.createElement('div');
+                card.className = 'exercise-card bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-stone-200 dark:border-stone-700';
+
+                // Find PB for the exercise
+                let personalBest = 'N/A';
+                if (exercise.history && exercise.history.length > 0) {
+                    const sortedHistory = [...exercise.history].sort((a, b) => {
+                        // Prioritize weight, then reps, then date
+                        if (a.weight !== b.weight) return b.weight - a.weight;
+                        if (a.reps !== b.reps) return b.reps - a.reps;
+                        return new Date(b.date).getTime() - new Date(a.date).getTime();
+                    });
+                    const bestSet = sortedHistory[0];
+                    personalBest = `${bestSet.weight}kg x ${bestSet.reps} reps on ${bestSet.date}`;
+                }
+                const nextWeekTarget = calculateNextWeekTarget(exercise);
+
+                card.innerHTML = `
+                    <h5 class="text-xl font-semibold text-teal-800 dark:text-teal-400">${exercise.name}</h5>
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-stone-600 dark:text-stone-300 my-3">
+                        <span><strong>Sets:</strong> ${exercise.sets}</span>
+                        <span><strong>Reps:</strong> ${exercise.reps}</span>
+                        <span><strong>Rest:</strong> ${exercise.rest}</span>
+                    </div>
+                    <p class="text-sm text-stone-700 dark:text-stone-200 mt-2"><strong>PB:</strong> ${personalBest}</p>
+                    <p class="text-sm text-stone-700 dark:text-stone-200 mb-3"><strong>Next Target:</strong> ${nextWeekTarget}</p>
+
+                    <div class="flex items-center gap-2 mb-3">
+                        <input type="number" step="0.5" placeholder="Weight (kg)" class="log-weight w-1/2 p-2 border border-stone-300 rounded-md bg-stone-50 dark:bg-stone-700 dark:border-stone-600 dark:text-stone-100 text-sm focus:ring-teal-500 focus:border-teal-500">
+                        <input type="number" placeholder="Reps" class="log-reps w-1/2 p-2 border border-stone-300 rounded-md bg-stone-50 dark:bg-stone-700 dark:border-stone-600 dark:text-stone-100 text-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <button class="log-set-button w-full py-2 mb-2 rounded-md bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-colors shadow-md">Log Set</button>
+
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button class="details-toggle text-sm font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 transition-colors">Show Details</button>
+                        ${exercise.history && exercise.history.length > 0 ? `<button class="view-history-button text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">View History</button>` : ''}
+                        ${exercise.alternatives && exercise.alternatives.length > 0 ? `<button class="swap-button text-sm font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 transition-colors">Swap</button>` : ''}
+                    </div>
+
+                    <div class="details-content mt-3 pt-3 border-t border-stone-200 dark:border-stone-700 text-sm text-stone-600 dark:text-stone-300">
+                        <p>${exercise.notes}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.querySelectorAll('.details-toggle').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault(); // Prevent default button behavior
+                    const content = button.closest('.exercise-card').querySelector('.details-content');
+                    content.classList.toggle('show');
+                    button.textContent = content.classList.contains('show') ? 'Hide Details' : 'Show Details';
+                });
+            });
+
+            document.querySelectorAll('.log-set-button').forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.exercise-card');
+                    const weightInput = card.querySelector('.log-weight');
+                    const repsInput = card.querySelector('.log-reps');
+                    const weight = parseFloat(weightInput.value);
+                    const reps = parseInt(repsInput.value, 10);
+
+                    if (isNaN(weight) || isNaN(reps) || weight <= 0 || reps <= 0) {
+                        alert('Please enter valid positive numbers for Weight and Reps.');
+                        return;
+                    }
+
+                    const exerciseIndex = Array.from(card.parentNode.children).indexOf(card);
+                    const exercise = dayData.exercises[exerciseIndex];
+                    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+                    if (!exercise.history) {
+                        exercise.history = [];
+                    }
+                    exercise.history.push({ date: today, weight: weight, reps: reps });
+                    saveWorkoutData(); // Save updated data to local storage
+
+                    // Update PB and Next Target display immediately
+                    const personalBest = calculatePersonalBest(exercise);
+                    card.querySelector('p:nth-of-type(1)').innerHTML = `<strong>PB:</strong> ${personalBest}`;
+                    card.querySelector('p:nth-of-type(2)').innerHTML = `<strong>Next Target:</strong> ${calculateNextWeekTarget(exercise)}`;
+
+                    // Clear inputs after logging
+                    weightInput.value = '';
+                    repsInput.value = '';
+
+                    // Show View History button if it wasn't there
+                    if (exercise.history.length === 1 && !card.querySelector('.view-history-button')) {
+                        const viewHistoryButton = document.createElement('button');
+                        viewHistoryButton.className = 'view-history-button text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors ml-2';
+                        viewHistoryButton.textContent = 'View History';
+                        viewHistoryButton.addEventListener('click', () => openHistoryModal(exercise));
+                        card.querySelector('.flex.flex-wrap.gap-2').appendChild(viewHistoryButton);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.view-history-button').forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.exercise-card');
+                    const exerciseIndex = Array.from(card.parentNode.children).indexOf(card);
+                    const exercise = dayData.exercises[exerciseIndex];
+                    openHistoryModal(exercise);
+                });
+            });
+
+            document.querySelectorAll('.swap-button').forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.exercise-card');
+                    const exerciseIndex = Array.from(card.parentNode.children).indexOf(card);
+                    const exercise = dayData.exercises[exerciseIndex];
+                    openSwapModal(exercise);
+                });
+            });
+        };
+
+        const calculatePersonalBest = (exercise) => {
+            if (!exercise.history || exercise.history.length === 0) {
+                return 'N/A';
+            }
+
+            // Sort history to find the 'best' set: prioritizing weight, then reps
+            const sortedHistory = [...exercise.history].sort((a, b) => {
+                if (a.weight !== b.weight) {
+                    return b.weight - a.weight; // Descending weight
+                }
+                return b.reps - a.reps; // Then descending reps
+            });
+
+            const bestSet = sortedHistory[0];
+            return `${bestSet.weight}kg x ${bestSet.reps} reps on ${bestSet.date}`;
+        };
+
+
+        // --- Modal Logic for History ---
+        const openHistoryModal = (exercise) => {
+            historyModalTitle.textContent = `${exercise.name} History`;
+            historyTableBody.innerHTML = '';
+
+            // Populate table
+            if (exercise.history && exercise.history.length > 0) {
+                exercise.history.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(record => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-stone-200 dark:border-stone-700 last:border-b-0';
+                    row.innerHTML = `
+                        <td class="px-4 py-2 text-stone-700 dark:text-stone-300">${record.date}</td>
+                        <td class="px-4 py-2 text-stone-700 dark:text-stone-300">${record.weight}kg</td>
+                        <td class="px-4 py-2 text-stone-700 dark:text-stone-300">${record.reps}</td>
+                    `;
+                    historyTableBody.appendChild(row);
+                });
+            } else {
+                historyTableBody.innerHTML = `<tr><td colspan="3" class="px-4 py-2 text-center text-stone-500 dark:text-stone-400">No history available for this exercise.</td></tr>`;
+            }
+
+            // Prepare chart data
+            const dates = exercise.history ? exercise.history.map(entry => entry.date) : [];
+            const weights = exercise.history ? exercise.history.map(entry => entry.weight) : [];
+            const reps = exercise.history ? exercise.history.map(entry => entry.reps) : [];
+
+            if (currentHistoryChart) {
+                currentHistoryChart.destroy();
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#F8F7F4' : '#333333';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            currentHistoryChart = new Chart(exerciseHistoryChartCanvas, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Weight (kg)',
+                            data: weights,
+                            borderColor: '#0f766e', // Teal-800
+                            backgroundColor: 'rgba(15, 118, 110, 0.2)',
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#0f766e'
+                        },
+                        {
+                            label: 'Reps',
+                            data: reps,
+                            borderColor: '#f97316', // Orange-500
+                            backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#f97316'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        legend: {
+                            labels: {
+                                color: textColor,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor },
+                            title: { display: true, text: 'Date', color: textColor }
+                        },
+                        y: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor },
+                            title: { display: true, text: 'Value', color: textColor }
+                        }
+                    }
+                }
+            });
+            historyModal.style.display = 'flex';
+        };
+
+        closeHistoryModalButton.addEventListener('click', () => {
+            historyModal.style.display = 'none';
+        });
+
+        // --- Modal Logic for Swap Alternatives ---
+        const openSwapModal = (exercise) => {
+            swapModalTitle.textContent = `Alternatives for ${exercise.name}`;
+            alternativesList.innerHTML = '';
+            if (exercise.alternatives && exercise.alternatives.length > 0) {
+                exercise.alternatives.forEach(alt => {
+                    const li = document.createElement('li');
+                    li.className = 'text-stone-700 dark:text-stone-300 text-base flex items-center';
+                    li.innerHTML = `<span class="text-teal-600 font-bold mr-3">&raquo;</span> ${alt}`;
+                    alternativesList.appendChild(li);
+                });
+            } else {
+                alternativesList.innerHTML = `<li class="text-stone-500 dark:text-stone-400">No specific alternatives listed for this exercise. Consider similar movements targeting the same muscle group.</li>`;
+            }
+            swapModal.style.display = 'flex';
+        };
+
+        closeSwapModalButton.addEventListener('click', () => {
+            swapModal.style.display = 'none';
+        });
+
+        // Close modals if clicked outside
+        window.addEventListener('click', (event) => {
+            if (event.target === historyModal) {
+                historyModal.style.display = 'none';
+            }
+            if (event.target === swapModal) {
+                swapModal.style.display = 'none';
+            }
+        });
+
+
+        // --- Quarter and Day Navigation Logic ---
+        const loadQuarter = (quarterKey) => {
+            try {
+                currentQuarterKey = quarterKey; // Update global currentQuarterKey
+                const currentQuarterData = workoutData[quarterKey];
+
+                if (!currentQuarterData) {
+                    quarterTitle.textContent = 'Error Loading Quarter';
+                    quarterGoal.textContent = 'No data found for this quarter. Please try selecting another.';
+                    quarterStyle.textContent = '';
+                    if (currentChart) currentChart.destroy();
+                    dayNavigation.innerHTML = '';
+                    workoutContent.innerHTML = '<p class="text-center text-red-600">No workout data available for this quarter.</p>';
+                    return;
+                }
+
+                quarterTitle.textContent = currentQuarterData.title;
+                quarterGoal.textContent = currentQuarterData.goal;
+                quarterStyle.textContent = currentQuarterData.style;
+                updateChart(currentQuarterData.chartData);
+
+                dayNavigation.innerHTML = '';
+                Object.keys(currentQuarterData.weeklyPlan).forEach((dayKey, index) => {
+                    const dayNum = index + 1;
+                    const button = document.createElement('button');
+                    button.className = 'day-button text-sm sm:text-base font-semibold py-2 px-4 rounded-full bg-stone-200 text-stone-700 hover:bg-teal-600 hover:text-white';
+                    button.textContent = `Day ${dayNum}`;
+                    button.dataset.day = dayKey;
+                    dayNavigation.appendChild(button);
+
+                    button.addEventListener('click', () => {
+                        document.querySelectorAll('.day-button').forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        displayWorkout(dayKey, currentQuarterData);
+                    });
+                });
+
+                const firstDayButton = dayNavigation.querySelector('.day-button');
+                if (firstDayButton) {
+                    firstDayButton.click();
+                } else {
+                    workoutContent.innerHTML = '<p class="text-center text-stone-500">No daily workout plan available for this quarter.</p>';
+                }
+
+                document.querySelectorAll('.quarter-button').forEach(btn => btn.classList.remove('active'));
+                const activatedQuarterButton = document.querySelector(`.quarter-button[data-quarter="${quarterKey}"]`);
+                if (activatedQuarterButton) {
+                    activatedQuarterButton.classList.add('active');
+                }
+
+            } catch (error) {
+                console.error("Error loading quarter:", error);
+                workoutContent.innerHTML = `<p class="text-center text-red-600">An error occurred loading this quarter: ${error.message}</p>`;
+            }
+        };
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                // Attach quarter button listeners
+                quarterButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        loadQuarter(button.dataset.quarter);
+                    });
+                });
+
+                // Load Q1 by default when the page loads
+                loadQuarter('q1');
+            } catch (error) {
+                console.error("Error during DOMContentLoaded setup:", error);
+                document.getElementById('workout-content').innerHTML = `<p class="text-center text-red-600">An error occurred during application startup: ${error.message}. Please check your browser's console for more details.</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
