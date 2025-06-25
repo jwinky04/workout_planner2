@@ -831,9 +831,9 @@
 
             if (lastSet.reps >= targetReps) {
                 if (exercise.sets.includes('4-6') || exercise.sets.includes('3-5')) { // Strength focus
-                    suggestedWeight = parseFloat(lastSet.weight) + 2.5; // Small weight increase
+                    suggestedWeight = parseFloat(lastSet.weight) + 5; // Small weight increase
                 } else { // Hypertrophy focus
-                    suggestedWeight = parseFloat(lastSet.weight) + 1.25; // Smaller weight increase
+                    suggestedWeight = parseFloat(lastSet.weight) + 2.5; // Smaller weight increase
                 }
                 suggestedReps = targetReps; // Aim for original target reps with new weight
                 return `Next Week: ${suggestedWeight}lbs x ${suggestedReps} reps (or try +1-2 reps)`;
@@ -896,7 +896,7 @@
                     <p class="text-sm text-stone-700 dark:text-stone-200 mb-3"><strong>Next Target:</strong> ${nextWeekTarget}</p>
 
                     <div class="flex items-center gap-2 mb-3">
-                        <input type="number" step="0.5" placeholder="Weight (kg)" class="log-weight w-1/2 p-2 border border-stone-300 rounded-md bg-stone-50 dark:bg-stone-700 dark:border-stone-600 dark:text-stone-100 text-sm focus:ring-teal-500 focus:border-teal-500">
+                        <input type="number" step="0.5" placeholder="Weight (lbs)" class="log-weight w-1/2 p-2 border border-stone-300 rounded-md bg-stone-50 dark:bg-stone-700 dark:border-stone-600 dark:text-stone-100 text-sm focus:ring-teal-500 focus:border-teal-500">
                         <input type="number" placeholder="Reps" class="log-reps w-1/2 p-2 border border-stone-300 rounded-md bg-stone-50 dark:bg-stone-700 dark:border-stone-600 dark:text-stone-100 text-sm focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <button class="log-set-button w-full py-2 mb-2 rounded-md bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-colors shadow-md">Log Set</button>
