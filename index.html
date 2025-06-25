@@ -823,7 +823,7 @@
             const targetReps = parseInt(exercise.reps.split('-')[0] || exercise.reps, 10);
 
             // Simple Progressive Overload Logic:
-            // If hit or exceeded target reps, increase weight slightly (+2.5kg for strength, +1.25kg for hypertrophy)
+            // If hit or exceeded target reps, increase weight slightly (+2.5lbs for strength, +1.25lbs for hypertrophy)
             // If within 1-2 reps of target, try to hit target reps with same weight next time
             // Otherwise, keep same weight, focus on form
             let suggestedWeight = lastSet.weight;
@@ -836,7 +836,7 @@
                     suggestedWeight = parseFloat(lastSet.weight) + 1.25; // Smaller weight increase
                 }
                 suggestedReps = targetReps; // Aim for original target reps with new weight
-                return `Next Week: ${suggestedWeight}kg x ${suggestedReps} reps (or try +1-2 reps)`;
+                return `Next Week: ${suggestedWeight}lbs x ${suggestedReps} reps (or try +1-2 reps)`;
             } else if (lastSet.reps >= targetReps - 2) { // Close to target, try for more reps
                  return `Next Week: Same weight, aim for ${targetReps} reps`;
             } else {
@@ -881,7 +881,7 @@
                         return new Date(b.date).getTime() - new Date(a.date).getTime();
                     });
                     const bestSet = sortedHistory[0];
-                    personalBest = `${bestSet.weight}kg x ${bestSet.reps} reps on ${bestSet.date}`;
+                    personalBest = `${bestSet.weight}lbs x ${bestSet.reps} reps on ${bestSet.date}`;
                 }
                 const nextWeekTarget = calculateNextWeekTarget(exercise);
 
@@ -999,7 +999,7 @@
             });
 
             const bestSet = sortedHistory[0];
-            return `${bestSet.weight}kg x ${bestSet.reps} reps on ${bestSet.date}`;
+            return `${bestSet.weight}lbs x ${bestSet.reps} reps on ${bestSet.date}`;
         };
 
 
